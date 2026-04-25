@@ -26,12 +26,12 @@ function Invoke-Npm {
   }
 }
 
-Invoke-Npm -WorkingDirectory $NestBackendRoot -Arguments @("install")
+Invoke-Npm -WorkingDirectory $NestBackendRoot -Arguments @("ci")
 Invoke-Npm -WorkingDirectory $NestBackendRoot -Arguments @("run", "build")
 
 foreach ($Service in $Services) {
   $ServicePath = Join-Path $BackendRoot $Service
-  Invoke-Npm -WorkingDirectory $ServicePath -Arguments @("install")
+  Invoke-Npm -WorkingDirectory $ServicePath -Arguments @("ci")
   Invoke-Npm -WorkingDirectory $ServicePath -Arguments @("run", "build")
 }
 

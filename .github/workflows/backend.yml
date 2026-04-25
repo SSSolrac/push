@@ -13,7 +13,8 @@ on:
       - "docker-compose.yml"
 
 jobs:
-  orchestration:
+  backend_orchestration:
+    name: Backend Orchestration
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -34,18 +35,26 @@ jobs:
 
       - name: Validate backend orchestration scripts
         run: |
-          node -e "const scripts = require('./package.json').scripts || {}; for (const name of ['setup:local','local','qa']) if (!scripts[name]) throw new Error('Missing ' + name);"
+          node -e "const scripts = require('./package.json').scripts || {}; for (const name of ['validate:split','setup:local','local','health','qa']) if (!scripts[name]) throw new Error('Missing ' + name);"
 
-  validate:
+      - name: Validate split guardrails
+        run: npm run validate:split
+
+  backend_packages:
+    name: Backend Packages
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        workspace:
-          - backend/backend
-          - backend/services/points-engine
-          - backend/services/campaign-service
-          - backend/services/gateway
+        include:
+          - name: Nest Backend
+            workspace: backend/backend
+          - name: Points Engine
+            workspace: backend/services/points-engine
+          - name: Campaign Service
+            workspace: backend/services/campaign-service
+          - name: Gateway
+            workspace: backend/services/gateway
     defaults:
       run:
         working-directory: ${{ matrix.workspace }}
@@ -59,6 +68,9 @@ jobs:
           node-version: 20
           cache: npm
           cache-dependency-path: ${{ matrix.workspace }}/package-lock.json
+
+      - name: Show target
+        run: echo "Validating ${{ matrix.name }} in ${{ matrix.workspace }}"
 
       - name: Install dependencies
         run: npm ci
