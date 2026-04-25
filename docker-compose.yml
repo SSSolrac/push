@@ -1,0 +1,39 @@
+services:
+  points-engine:
+    build:
+      context: ./backend/services/points-engine
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: production
+      PORT: 4001
+      USE_LOCAL_LOYALTY_API: "false"
+    ports:
+      - "4001:4001"
+
+  campaign-service:
+    build:
+      context: ./backend/services/campaign-service
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: production
+      PORT: 4002
+      USE_LOCAL_LOYALTY_API: "false"
+    ports:
+      - "4002:4002"
+
+  gateway:
+    build:
+      context: ./backend/services/gateway
+      dockerfile: Dockerfile
+    depends_on:
+      - points-engine
+      - campaign-service
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      USE_LOCAL_LOYALTY_API: "false"
+      POINTS_ENGINE_URL: http://points-engine:4001
+      CAMPAIGN_SERVICE_URL: http://campaign-service:4002
+      NEXT_API_URL: http://host.docker.internal:3000/api
+    ports:
+      - "4000:4000"

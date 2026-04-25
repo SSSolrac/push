@@ -1,0 +1,55 @@
+name: Backend
+
+on:
+  push:
+    paths:
+      - "backend/**"
+  pull_request:
+    paths:
+      - "backend/**"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        workspace:
+          - backend/backend
+          - backend/services/points-engine
+          - backend/services/campaign-service
+          - backend/services/gateway
+    defaults:
+      run:
+        working-directory: ${{ matrix.workspace }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: ${{ matrix.workspace }}/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build if available
+        run: |
+          if node -e "process.exit(require('./package.json').scripts?.build ? 0 : 1)"; then
+            npm run build
+          else
+            echo "No build script defined."
+          fi
+
+      - name: Test or verify if available
+        run: |
+          if node -e "process.exit(require('./package.json').scripts?.test ? 0 : 1)"; then
+            npm test
+          elif node -e "process.exit(require('./package.json').scripts?.verify ? 0 : 1)"; then
+            npm run verify
+          else
+            echo "No test or verify script defined."
+          fi

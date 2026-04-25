@@ -3,20 +3,23 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$Root = Resolve-Path (Join-Path $PSScriptRoot "..")
-$Runtime = Join-Path $Root ".runtime"
+$BackendRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
+$ProjectRoot = Resolve-Path (Join-Path $BackendRoot "..")
+$FrontendRoot = Join-Path $ProjectRoot "frontend"
+$Runtime = Join-Path $BackendRoot ".runtime"
 New-Item -ItemType Directory -Force -Path $Runtime | Out-Null
 
 $RequiredPaths = @(
-  (Join-Path $Root "node_modules\next"),
-  (Join-Path $Root "services\points-engine\dist\server.js"),
-  (Join-Path $Root "services\campaign-service\dist\server.js"),
-  (Join-Path $Root "services\gateway\dist\server.js")
+  (Join-Path $FrontendRoot "node_modules/next"),
+  (Join-Path $BackendRoot "services/points-engine/dist/server.js"),
+  (Join-Path $BackendRoot "services/campaign-service/dist/server.js"),
+  (Join-Path $BackendRoot "services/gateway/dist/server.js")
 )
 
 $Missing = $RequiredPaths | Where-Object { -not (Test-Path $_) }
 if ($Missing.Count -gt 0) {
   Write-Output "Local stack is not built yet. Run this first:"
+  Write-Output "cd frontend"
   Write-Output "npm run setup:local"
   Write-Output ""
   Write-Output "Missing:"
@@ -41,22 +44,22 @@ if ($StopExisting) {
 $Services = @(
   @{
     Name = "next"
-    WorkingDirectory = $Root
-    Arguments = @("scripts/next-dev-inproc.cjs")
+    WorkingDirectory = $FrontendRoot
+    Arguments = @((Join-Path $BackendRoot "scripts/next-dev-inproc.cjs"))
   },
   @{
     Name = "points-engine"
-    WorkingDirectory = Join-Path $Root "services\points-engine"
+    WorkingDirectory = Join-Path $BackendRoot "services/points-engine"
     Arguments = @("dist/server.js")
   },
   @{
     Name = "campaign-service"
-    WorkingDirectory = Join-Path $Root "services\campaign-service"
+    WorkingDirectory = Join-Path $BackendRoot "services/campaign-service"
     Arguments = @("dist/server.js")
   },
   @{
     Name = "gateway"
-    WorkingDirectory = Join-Path $Root "services\gateway"
+    WorkingDirectory = Join-Path $BackendRoot "services/gateway"
     Arguments = @("dist/server.js")
   }
 )
