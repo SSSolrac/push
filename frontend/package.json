@@ -5,20 +5,8 @@
     "type": "module",
     "scripts": {
         "build": "next build",
-        "dev": "node ../backend/scripts/next-dev-inproc.cjs",
-        "dev:frontend": "node ../backend/scripts/next-dev-inproc.cjs",
-        "setup:backend": "npm --prefix ../backend/backend install",
-        "dev:backend": "npm --prefix ../backend/backend run start:dev",
-        "build:backend": "npm --prefix ../backend/backend run build",
-        "start:backend": "npm --prefix ../backend/backend run start",
-        "build:all": "npm run build && npm run build:backend",
-        "health": "powershell -NoProfile -Command \"Invoke-RestMethod http://localhost:4000/health | ConvertTo-Json -Depth 6\"",
-        "setup:local": "powershell -NoProfile -ExecutionPolicy Bypass -File ../backend/scripts/setup-local-stack.ps1",
-        "local": "powershell -NoProfile -ExecutionPolicy Bypass -File ../backend/scripts/start-local-stack.ps1 -StopExisting",
-        "qa": "powershell -NoProfile -ExecutionPolicy Bypass -File ../backend/scripts/test-local-stack.ps1",
-        "preserver": "next build",
-        "prestart": "next build",
-        "server": "next start --hostname 0.0.0.0 --port 3000",
+        "dev": "next dev --hostname 0.0.0.0 --port 3000",
+        "health": "powershell -NoProfile -Command \"Invoke-RestMethod http://127.0.0.1:3000/api/health | ConvertTo-Json -Depth 6\"",
         "start": "next start --hostname 0.0.0.0 --port 3000"
     },
     "dependencies": {

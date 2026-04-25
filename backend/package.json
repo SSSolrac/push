@@ -1,0 +1,20 @@
+{
+  "name": "centralperk-backend",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "setup:local": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup-local-stack.ps1",
+    "local": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-local-stack.ps1 -StopExisting",
+    "qa": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-local-stack.ps1",
+    "build": "npm run build:nest && npm run build:points-engine && npm run build:campaign-service && npm run build:gateway",
+    "build:nest": "npm --prefix backend run build",
+    "build:points-engine": "npm --prefix services/points-engine run build",
+    "build:campaign-service": "npm --prefix services/campaign-service run build",
+    "build:gateway": "npm --prefix services/gateway run build",
+    "dev:nest": "npm --prefix backend run start:dev",
+    "start:nest": "npm --prefix backend run start",
+    "start:points-engine": "npm --prefix services/points-engine start",
+    "start:campaign-service": "npm --prefix services/campaign-service start",
+    "start:gateway": "npm --prefix services/gateway start"
+  }
+}

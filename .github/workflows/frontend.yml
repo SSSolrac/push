@@ -4,9 +4,13 @@ on:
   push:
     paths:
       - "frontend/**"
+      - ".github/workflows/frontend.yml"
+      - "docker-compose.yml"
   pull_request:
     paths:
       - "frontend/**"
+      - ".github/workflows/frontend.yml"
+      - "docker-compose.yml"
 
 jobs:
   build:

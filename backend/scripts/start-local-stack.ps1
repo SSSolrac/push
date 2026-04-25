@@ -4,13 +4,10 @@ param(
 
 $ErrorActionPreference = "Stop"
 $BackendRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
-$ProjectRoot = Resolve-Path (Join-Path $BackendRoot "..")
-$FrontendRoot = Join-Path $ProjectRoot "frontend"
 $Runtime = Join-Path $BackendRoot ".runtime"
 New-Item -ItemType Directory -Force -Path $Runtime | Out-Null
 
 $RequiredPaths = @(
-  (Join-Path $FrontendRoot "node_modules/next"),
   (Join-Path $BackendRoot "services/points-engine/dist/server.js"),
   (Join-Path $BackendRoot "services/campaign-service/dist/server.js"),
   (Join-Path $BackendRoot "services/gateway/dist/server.js")
@@ -19,7 +16,7 @@ $RequiredPaths = @(
 $Missing = $RequiredPaths | Where-Object { -not (Test-Path $_) }
 if ($Missing.Count -gt 0) {
   Write-Output "Local stack is not built yet. Run this first:"
-  Write-Output "cd frontend"
+  Write-Output "cd backend"
   Write-Output "npm run setup:local"
   Write-Output ""
   Write-Output "Missing:"
@@ -27,7 +24,7 @@ if ($Missing.Count -gt 0) {
   exit 1
 }
 
-$Ports = @(3000, 4000, 4001, 4002)
+$Ports = @(4000, 4001, 4002)
 
 if ($StopExisting) {
   foreach ($Port in $Ports) {
@@ -42,11 +39,6 @@ if ($StopExisting) {
 }
 
 $Services = @(
-  @{
-    Name = "next"
-    WorkingDirectory = $FrontendRoot
-    Arguments = @((Join-Path $BackendRoot "scripts/next-dev-inproc.cjs"))
-  },
   @{
     Name = "points-engine"
     WorkingDirectory = Join-Path $BackendRoot "services/points-engine"
@@ -84,15 +76,27 @@ foreach ($Service in $Services) {
   Write-Output "$($Service.Name) pid=$($Process.Id)"
 }
 
-Start-Sleep -Seconds 8
+function Wait-Health {
+  param(
+    [Parameter(Mandatory = $true)][string]$Name,
+    [Parameter(Mandatory = $true)][string]$Url
+  )
 
-foreach ($Port in $Ports) {
-  $Listeners = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
-  if ($Listeners) {
-    foreach ($Listener in $Listeners) {
-      Write-Output "port $Port listening pid=$($Listener.OwningProcess)"
+  for ($Attempt = 0; $Attempt -lt 30; $Attempt++) {
+    try {
+      $Response = Invoke-RestMethod -Method GET -Uri $Url -TimeoutSec 2
+      if ($Response.ok -eq $true) {
+        Write-Output "$Name healthy at $Url"
+        return
+      }
+    } catch {
+      Start-Sleep -Milliseconds 500
     }
-  } else {
-    Write-Output "port $Port not listening"
   }
+
+  throw "$Name did not become healthy at $Url"
 }
+
+Wait-Health -Name "gateway" -Url "http://127.0.0.1:4000/health"
+Wait-Health -Name "points-engine" -Url "http://127.0.0.1:4001/health"
+Wait-Health -Name "campaign-service" -Url "http://127.0.0.1:4002/health"
